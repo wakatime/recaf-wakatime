@@ -91,23 +91,17 @@ public final class HeartbeatService {
 		}
 	}
 
-	private List<String> buildCommand(Heartbeat heartbeat) {
+	List<String> buildCommand(Heartbeat heartbeat) {
 		List<String> command = new ArrayList<>();
 		command.add(cli.toString());
 		command.add("--entity");
 		command.add(heartbeat.entity());
 		command.add("--plugin");
 		command.add(pluginUserAgent);
-		command.add("--category");
-		command.add(heartbeat.category());
-		command.add("--language");
-		command.add(heartbeat.language());
-		command.add("--alternate-project");
-		command.add(heartbeat.project());
-		if (heartbeat.projectFolder() != null) {
-			command.add("--project-folder");
-			command.add(heartbeat.projectFolder());
-		}
+		addOption(command, "--category", heartbeat.category());
+		addOption(command, "--language", heartbeat.language());
+		addOption(command, "--alternate-project", heartbeat.project());
+		addOption(command, "--project-folder", heartbeat.projectFolder());
 		command.add("--time");
 		command.add(Long.toString(heartbeat.epochSeconds()));
 		if (heartbeat.lineNumber() > 0) {
@@ -118,10 +112,18 @@ public final class HeartbeatService {
 			command.add("--cursorpos");
 			command.add(Integer.toString(heartbeat.cursorPosition()));
 		}
-		if (heartbeat.write())
+		if (heartbeat.write()) {
 			command.add("--write");
+        }
 		// The API key is intentionally not passed here; wakatime-cli reads it from
 		// ~/.wakatime.cfg so it never appears in the process arguments.
 		return command;
+	}
+
+	private static void addOption(List<String> command, String option, String value) {
+		if (value == null || value.isBlank())
+			return;
+		command.add(option);
+		command.add(value);
 	}
 }
