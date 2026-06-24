@@ -20,13 +20,14 @@ public final class Entities {
 	private Entities() {
 	}
 
-	public static Heartbeat forClass(String project, String internalName, String text,
+	public static Heartbeat forClass(String project, String projectFolder, String internalName, String text,
 									 int lineNumber, int cursorPosition, boolean write) {
 		Path file = cacheFile(project, internalName);
 		writeText(file, text != null && !text.isEmpty() ? text : "// " + internalName.replace('/', '.'));
 		return new Heartbeat(
 				file.toAbsolutePath().toString(),
 				project,
+				projectFolder,
 				WakaTime.LANGUAGE,
 				WakaTime.CATEGORY,
 				lineNumber,

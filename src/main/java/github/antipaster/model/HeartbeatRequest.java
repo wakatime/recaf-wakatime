@@ -7,6 +7,7 @@ package github.antipaster.model;
  */
 public record HeartbeatRequest(
 		String project,
+		String projectFolder,
 		String internalName,
 		String text,
 		int lineNumber,

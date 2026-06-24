@@ -20,6 +20,7 @@ import software.coley.recaf.RecafBuildConfig;
 import software.coley.recaf.analytics.logging.Logging;
 import software.coley.recaf.info.ClassInfo;
 import software.coley.recaf.info.JvmClassInfo;
+import software.coley.recaf.info.properties.builtin.InputFilePathProperty;
 import software.coley.recaf.services.navigation.ClassNavigable;
 import software.coley.recaf.services.workspace.WorkspaceCloseListener;
 import software.coley.recaf.services.workspace.WorkspaceManager;
@@ -33,6 +34,7 @@ import software.coley.recaf.workspace.model.bundle.JvmClassBundle;
 import software.coley.recaf.workspace.model.resource.WorkspaceFileResource;
 import software.coley.recaf.workspace.model.resource.WorkspaceResource;
 
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -67,6 +69,7 @@ public final class WakaTimeController implements WorkspaceOpenListener, Workspac
 	private volatile EventBus eventBus;
 	private volatile JvmClassBundle boundBundle;
 	private volatile String projectName;
+	private volatile String projectFolder;
 
 	// Editor binding state; mutated only on the JavaFX thread.
 	private Node boundNode;
@@ -145,6 +148,7 @@ public final class WakaTimeController implements WorkspaceOpenListener, Workspac
 	@Override
 	public void onWorkspaceOpened(Workspace workspace) {
 		projectName = deriveProject(workspace);
+		projectFolder = deriveProjectFolder(workspace);
 		detachBundle();
 		try {
 			JvmClassBundle bundle = workspace.getPrimaryResource().getJvmClassBundle();
@@ -159,6 +163,7 @@ public final class WakaTimeController implements WorkspaceOpenListener, Workspac
 	public void onWorkspaceClosed(Workspace workspace) {
 		detachBundle();
 		projectName = null;
+		projectFolder = null;
 		currentClassName = null;
 		FxThreadUtil.run(this::detachEditor);
 	}
@@ -174,7 +179,7 @@ public final class WakaTimeController implements WorkspaceOpenListener, Workspac
 		if (service == null)
 			return;
 		boolean focused = name.equals(currentClassName);
-		service.send(project(), name,
+		service.send(project(), projectFolder, name,
 				focused ? currentLine : 0,
 				focused ? currentColumn : 0,
 				true,
@@ -263,7 +268,7 @@ public final class WakaTimeController implements WorkspaceOpenListener, Workspac
 		if (service == null || name == null)
 			return;
 		if (editor == null) {
-			service.send(project(), name, 0, 0, false, null);
+			service.send(project(), projectFolder, name, 0, 0, false, null);
 			return;
 		}
 		CodeArea area = editor.getCodeArea();
@@ -274,7 +279,7 @@ public final class WakaTimeController implements WorkspaceOpenListener, Workspac
 		// getText() reads the whole editor buffer, so it is deferred into this supplier:
 		// HeartbeatService only invokes it (on this JavaFX thread) when the heartbeat is
 		// not throttled, instead of on every caret movement.
-		service.send(project(), name, line, column, false, () -> {
+		service.send(project(), projectFolder, name, line, column, false, () -> {
 			String text = editor.getText();
 			currentText = text;
 			return text;
@@ -316,6 +321,22 @@ public final class WakaTimeController implements WorkspaceOpenListener, Workspac
 			name = name.substring(separator + 1);
 		name = stripArchiveExtension(name);
 		return name.isBlank() ? WakaTime.DEFAULT_PROJECT : name;
+	}
+
+	/**
+	 * The directory on disk that the workspace was opened from, passed to wakatime-cli as
+	 * {@code --project-folder} so it can pick up a git repo / branch when the input happens
+	 * to live inside one. Null for in-memory workspaces, which have no on-disk location.
+	 */
+	private static String deriveProjectFolder(Workspace workspace) {
+		WorkspaceResource resource = workspace.getPrimaryResource();
+		if (!(resource instanceof WorkspaceFileResource fileResource))
+			return null;
+		Path input = InputFilePathProperty.get(fileResource.getFileInfo());
+		if (input == null)
+			return null;
+		Path parent = input.toAbsolutePath().getParent();
+		return parent != null ? parent.toString() : null;
 	}
 
 	private static String stripArchiveExtension(String name) {

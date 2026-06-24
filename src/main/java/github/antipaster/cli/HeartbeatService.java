@@ -48,7 +48,7 @@ public final class HeartbeatService {
 	 * clears throttling, so it stays off the hot path of every caret move. It runs on the
 	 * caller's thread, so callers on the JavaFX thread may read JavaFX state from it.
 	 */
-	public void send(String project, String internalName, int lineNumber, int cursorPosition,
+	public void send(String project, String projectFolder, String internalName, int lineNumber, int cursorPosition,
 					 boolean write, Supplier<String> textSupplier) {
 		String key = project + ' ' + internalName;
 		synchronized (lock) {
@@ -60,7 +60,7 @@ public final class HeartbeatService {
 			lastSentMs = now;
 		}
 		String text = textSupplier != null ? safeGet(textSupplier) : null;
-		HeartbeatRequest request = new HeartbeatRequest(project, internalName, text, lineNumber, cursorPosition, write);
+		HeartbeatRequest request = new HeartbeatRequest(project, projectFolder, internalName, text, lineNumber, cursorPosition, write);
 		try {
 			executor.execute(() -> execute(request));
 		} catch (RejectedExecutionException ignored) {
@@ -81,7 +81,7 @@ public final class HeartbeatService {
 
 	private void execute(HeartbeatRequest request) {
 		try {
-			Heartbeat heartbeat = Entities.forClass(request.project(), request.internalName(),
+			Heartbeat heartbeat = Entities.forClass(request.project(), request.projectFolder(), request.internalName(),
 					request.text(), request.lineNumber(), request.cursorPosition(), request.write());
 			int exit = Proc.run(buildCommand(heartbeat), 120);
 			if (exit != 0)
@@ -104,8 +104,10 @@ public final class HeartbeatService {
 		command.add(heartbeat.language());
 		command.add("--project");
 		command.add(heartbeat.project());
-		command.add("--alternate-project");
-		command.add(heartbeat.project());
+		if (heartbeat.projectFolder() != null) {
+			command.add("--project-folder");
+			command.add(heartbeat.projectFolder());
+		}
 		command.add("--time");
 		command.add(Long.toString(heartbeat.epochSeconds()));
 		if (heartbeat.lineNumber() > 0) {
