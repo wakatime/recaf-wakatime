@@ -102,7 +102,7 @@ replaceToken {
     // Only the plugin class carries the @PluginInformation tokens. Restricting the rewrite
     // to it avoids recomputing stack-map frames for the rest of the plugin (which references
     // Recaf types that aren't on the token plugin's classpath).
-    replaceIn 'github/antipaster/RecafWakatimePlugin'
+    replaceIn 'github/wakatime/recaf-wakatime'
     replace("##ID##", project.ext.pluginId)
     replace("##NAME##", project.ext.pluginName)
     replace("##DESC##", project.ext.pluginDesc)

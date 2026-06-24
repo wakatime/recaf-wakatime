@@ -1,6 +1,7 @@
 # Recaf WakaTime
 
-A [Recaf](https://github.com/Col-E/Recaf) `4.X` plugin that logs the time you spend reverse‑engineering with [WakaTime](https://wakatime.com). The class you're reading or editing shows up on your WakaTime dashboard, grouped by the workspace it came from.
+A [Recaf][recaf] `4.X` plugin that logs the time you spend reverse‑engineering with [WakaTime][wakatime].
+The class you're reading or editing shows up on your WakaTime dashboard, grouped by the workspace it came from.
 
 ![A WakaTime project dashboard showing time tracked in Recaf](assets/1.png)
 
@@ -12,9 +13,9 @@ The first time it runs, the plugin downloads `wakatime-cli` into `~/.wakatime/` 
 
 ## Setup
 
-You need a WakaTime account and API key (free): https://wakatime.com/settings/api-key
+You need a WakaTime account and API key (free): https://wakatime.com/api-key
 
-The key is read from `~/.wakatime.cfg`, shared with all your other WakaTime plugins. If no key is found, the plugin asks for it once on startup and writes it there. 
+The key is read from `~/.wakatime.cfg`, shared with all your other WakaTime plugins. If no key is found, the plugin asks for it once on startup and writes it there.
 
 ## Building
 
@@ -40,3 +41,5 @@ Then start Recaf, open a workspace, and your time starts logging.
 > ```
 
 
+[wakatime]: https://wakatime.com
+[recaf]: https://github.com/Col-E/Recaf
