@@ -96,6 +96,7 @@ public final class HeartbeatService {
 		command.add(cli.toString());
 		command.add("--entity");
 		command.add(heartbeat.entity());
+		command.add("--is-unsaved-entity");
 		command.add("--plugin");
 		command.add(pluginUserAgent);
 		addOption(command, "--category", heartbeat.category());
