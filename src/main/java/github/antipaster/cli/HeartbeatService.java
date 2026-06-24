@@ -102,7 +102,7 @@ public final class HeartbeatService {
 		command.add(heartbeat.category());
 		command.add("--language");
 		command.add(heartbeat.language());
-		command.add("--project");
+		command.add("--alternate-project");
 		command.add(heartbeat.project());
 		if (heartbeat.projectFolder() != null) {
 			command.add("--project-folder");
